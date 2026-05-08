@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Ticket Framework — Shadow Operator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #060606;
+  --dark:   #0E0E0E;
+  --surf:   #141414;
+  --surf2:  #1c1c1a;
+  --gold:   #B8972E;
+  --gold-l: #D4AF5A;
+  --gold-d: rgba(184,151,46,0.12);
+  --gold-b: rgba(184,151,46,0.32);
+  --white:  #F5F0E8;
+  --muted:  #7A7060;
+  --muted2: #3d3830;
+  --cin: 'Cinzel', serif;
+  --cor: 'Cormorant Garamond', serif;
+  --int: 'Inter', sans-serif;
+  --green:  #4d8c5a;
+  --green-b: rgba(77,140,90,0.18);
+  --red:    #8c4d4d;
+  --red-b:  rgba(140,77,77,0.15);
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  background:#030303; font-family:var(--int);
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+
+/* ── PROGRESS ── */
+.pb{ position:fixed; top:0; left:0; right:0; z-index:100; height:2px; background:var(--surf); }
+.pf{ height:100%; background:linear-gradient(to right,var(--gold),var(--gold-l)); transition:width .35s ease; }
+
+/* ── DECK ── */
+.deck{ width:100%; max-width:860px; padding:20px 20px 90px; }
+
+/* ── SLIDE ── */
+.slide{
+  display:none; flex-direction:column;
+  background:var(--bg); border:1px solid var(--gold-b);
+  position:relative; overflow:hidden; min-height:480px;
+  animation:fadeUp .28s ease;
+}
+.slide.active{ display:flex; }
+@keyframes fadeUp{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.slide::before,.slide::after{
+  content:''; position:absolute; top:16px; bottom:16px; width:1px;
+  background:linear-gradient(to bottom,transparent,var(--gold) 25%,var(--gold) 75%,transparent);
+  z-index:2;
+}
+.slide::before{ left:22px; }
+.slide::after { right:22px; }
+
+.hr    { height:1px; width:calc(100% - 88px); margin:0 auto; background:linear-gradient(to right,transparent,var(--gold),transparent); flex-shrink:0; }
+.hr-d  { height:1px; width:calc(100% - 88px); margin:0 auto; background:linear-gradient(to right,transparent,var(--gold-b),transparent); flex-shrink:0; margin-top:auto; }
+.si    { flex:1; padding:26px 52px 22px; display:flex; flex-direction:column; position:relative; z-index:1; }
+.sf    { display:flex; justify-content:space-between; align-items:center; padding:0 44px 18px; z-index:3; position:relative; }
+.sf-b  { font-family:var(--cin); font-size:9px; letter-spacing:.3em; color:var(--gold); text-transform:uppercase; }
+.sf-n  { font-family:var(--cin); font-size:9px; letter-spacing:.15em; color:var(--muted); }
+
+/* ── TYPE ── */
+.ey  { font-family:var(--cin); font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.h1  { font-family:var(--cin); font-size:clamp(24px,4.5vw,42px); font-weight:700; color:var(--white); letter-spacing:.06em; text-transform:uppercase; line-height:1.1; margin-bottom:6px; }
+.h1 em{ color:var(--gold); font-style:normal; display:block; }
+.h2  { font-family:var(--cin); font-size:clamp(15px,2.8vw,24px); font-weight:600; color:var(--gold); letter-spacing:.1em; text-transform:uppercase; line-height:1.15; margin-bottom:6px; }
+.bod { font-family:var(--cor); font-size:clamp(13px,1.7vw,16px); color:var(--muted); line-height:1.8; font-weight:300; }
+.bod strong{ color:var(--white); font-weight:400; }
+.bod em{ color:var(--gold-l); font-style:italic; }
+
+.gr  { display:flex; align-items:center; gap:10px; margin:10px 0 18px; }
+.grl { flex:1; height:1px; background:var(--gold); }
+.grd { width:7px; height:7px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
+
+/* ── COVER ── */
+.cbg { position:absolute; font-family:var(--cin); font-size:clamp(80px,18vw,160px); font-weight:700; color:var(--surf2); top:50%; left:50%; transform:translate(-50%,-55%); user-select:none; pointer-events:none; z-index:0; white-space:nowrap; }
+.cc  { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:36px 52px; position:relative; z-index:1; }
+
+/* ── BADGE ── */
+.badge { display:inline-flex; align-items:center; gap:10px; margin-bottom:14px; }
+.bn    { font-family:var(--cin); font-size:11px; font-weight:600; color:var(--bg); background:var(--gold); padding:3px 10px; letter-spacing:.1em; }
+.bl    { font-family:var(--cin); font-size:9px; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); }
+
+/* ── BULLET LIST ── */
+.bl-list{ display:flex; flex-direction:column; gap:2px; }
+.bl-item{ display:grid; grid-template-columns:20px 1fr; gap:10px; padding:9px 14px; background:var(--surf); border:1px solid rgba(255,255,255,0.04); }
+.bl-item:first-child{ border-top:1px solid var(--gold-b); }
+.dot  { color:var(--gold); font-size:9px; padding-top:4px; }
+.bt   { font-family:var(--cor); font-size:clamp(13px,1.6vw,15px); color:var(--white); line-height:1.65; }
+.bt small{ color:var(--muted); font-size:11px; display:block; margin-top:2px; font-family:var(--int); line-height:1.5; }
+
+/* ── KPI ROW ── */
+.kpi-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+.kpi    { background:var(--surf); border:1px solid var(--gold-b); padding:14px 12px; text-align:center; }
+.kv     { font-family:var(--cin); font-size:clamp(14px,2.2vw,20px); color:var(--gold); font-weight:600; margin-bottom:4px; }
+.kl     { font-family:var(--int); font-size:9px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; line-height:1.4; }
+
+/* ── PRICING SPLIT ── */
+.price-grid{ display:grid; grid-template-columns:1fr 40px 1fr; gap:0; align-items:stretch; margin-top:4px; }
+.pc       { background:var(--surf); border:1px solid var(--gold-b); padding:18px; }
+.pc.hl    { border-color:var(--gold); background:rgba(184,151,46,0.07); }
+.pc-tag   { font-family:var(--cin); font-size:8px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+.pc-name  { font-family:var(--cin); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--white); margin-bottom:10px; }
+.pc-item  { font-family:var(--int); font-size:11px; color:var(--muted); padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.pc-item:last-child{ border-bottom:none; }
+.vs-col   { display:flex; align-items:center; justify-content:center; background:var(--bg); }
+.vs-text  { font-family:var(--cin); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); writing-mode:vertical-rl; }
+
+/* ── ENTRY FLOW ── */
+.entry-flow{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--gold-b); border:1px solid var(--gold-b); margin-top:4px; margin-bottom:16px; }
+.ef-step  { background:var(--bg); padding:14px 10px; text-align:center; }
+.ef-step.hl{ background:rgba(184,151,46,0.1); }
+.ef-num   { font-family:var(--cin); font-size:8px; letter-spacing:.15em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; }
+.ef-name  { font-family:var(--cin); font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--white); margin-bottom:3px; }
+.ef-desc  { font-family:var(--int); font-size:9px; color:var(--muted); line-height:1.4; }
+
+/* ── SALES CALL STRUCTURE ── */
+.call-steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--gold-b); border:1px solid var(--gold-b); margin-top:4px; margin-bottom:12px; }
+.cs-step  { background:var(--bg); padding:16px 12px; text-align:center; position:relative; }
+.cs-step::after{ content:'→'; position:absolute; right:-7px; top:50%; transform:translateY(-50%); color:var(--gold); font-size:11px; z-index:2; }
+.cs-step:last-child::after{ display:none; }
+.cs-num   { font-family:var(--cin); font-size:18px; color:var(--gold); font-weight:600; margin-bottom:4px; opacity:.5; }
+.cs-name  { font-family:var(--cin); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--white); margin-bottom:4px; }
+.cs-desc  { font-family:var(--int); font-size:9px; color:var(--muted); line-height:1.45; }
+
+/* ── OBJECTION CARDS ── */
+.obj-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:4px; }
+.obj-card { background:var(--surf); border:1px solid rgba(255,255,255,0.05); border-top:2px solid var(--gold); padding:14px; }
+.oc-q     { font-family:var(--cor); font-size:13px; color:var(--muted); font-style:italic; margin-bottom:8px; line-height:1.5; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px; }
+.oc-a     { font-family:var(--cor); font-size:13px; color:var(--white); line-height:1.65; }
+
+/* ── DELIVERY STACK ── */
+.del-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px; }
+.dg       { background:var(--surf); border:1px solid rgba(255,255,255,0.05); padding:14px; }
+.dg.hl    { border-color:var(--gold-b); }
+.dg-lbl   { font-family:var(--cin); font-size:8px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.dg-item  { font-family:var(--int); font-size:11px; color:var(--white); padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.dg-item:last-child{ border-bottom:none; }
+
+/* ── RETENTION PATHS ── */
+.ret-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:4px; margin-bottom:16px; }
+.rc       { background:var(--surf); border:1px solid rgba(255,255,255,0.05); padding:16px; }
+.rc.gold  { border-color:var(--gold); background:rgba(184,151,46,0.07); }
+.rc-lbl   { font-family:var(--cin); font-size:8px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+.rc-name  { font-family:var(--cin); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--white); margin-bottom:6px; }
+.rc-body  { font-family:var(--cor); font-size:13px; color:var(--muted); line-height:1.65; }
+.rc-script{ font-family:var(--cor); font-size:13px; color:var(--gold-l); font-style:italic; margin-top:8px; line-height:1.5; border-top:1px solid var(--gold-b); padding-top:8px; }
+
+/* ── CAPACITY TIER ── */
+.cap-tier { display:grid; grid-template-columns:80px 1fr; gap:0; margin-bottom:2px; }
+.ct-num   { background:var(--surf); border:1px solid var(--gold-b); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 8px; text-align:center; border-right:none; }
+.ct-count { font-family:var(--cin); font-size:18px; color:var(--gold); font-weight:600; line-height:1; }
+.ct-label { font-family:var(--int); font-size:8px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-top:3px; }
+.ct-body  { background:var(--surf); border:1px solid var(--gold-b); padding:14px 18px; }
+.ct-name  { font-family:var(--cin); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--white); margin-bottom:4px; }
+.ct-desc  { font-family:var(--cor); font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:6px; }
+.ct-trigger{ font-family:var(--int); font-size:10px; color:var(--gold-l); }
+.ct-trigger strong{ color:var(--gold); font-weight:600; }
+
+/* ── CALLOUT ── */
+.callout  { display:flex; gap:12px; align-items:flex-start; padding:12px 16px; background:rgba(184,151,46,0.06); border:1px solid var(--gold-b); border-left:2px solid var(--gold); margin-top:14px; }
+.callout-icon{ color:var(--gold); font-size:14px; flex-shrink:0; margin-top:2px; }
+.callout-text{ font-family:var(--cor); font-size:13px; color:var(--white); line-height:1.7; }
+.callout-text em{ color:var(--gold-l); font-style:italic; }
+
+/* ── SYSTEM OVERVIEW ── */
+.sys-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--gold-b); margin-top:4px; }
+.sg       { background:var(--bg); padding:16px 12px; text-align:center; }
+.sg-n     { font-family:var(--cin); font-size:22px; color:var(--gold); font-weight:600; margin-bottom:4px; }
+.sg-name  { font-family:var(--cin); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--white); margin-bottom:6px; }
+.sg-desc  { font-family:var(--cor); font-size:11px; color:var(--muted); line-height:1.55; }
+
+/* ── NAV ── */
+.nav{ position:fixed; bottom:0; left:0; right:0; z-index:50; background:var(--dark); border-top:1px solid var(--gold-b); display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 20px; }
+.nb { background:transparent; border:1px solid var(--gold-b); color:var(--white); font-family:var(--cin); font-size:9px; letter-spacing:.2em; text-transform:uppercase; padding:9px 22px; cursor:pointer; transition:all .15s; flex-shrink:0; }
+.nb:hover{ border-color:var(--gold); color:var(--gold); }
+.nb:disabled{ opacity:.2; pointer-events:none; }
+.dots{ display:flex; gap:5px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.nd { width:5px; height:5px; border-radius:50%; border:1px solid var(--gold-b); cursor:pointer; transition:all .15s; background:transparent; flex-shrink:0; }
+.nd.active{ background:var(--gold); border-color:var(--gold); transform:scale(1.3); }
+.nl { font-family:var(--cin); font-size:8px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); min-width:72px; text-align:center; flex-shrink:0; }
+
+/* ── MOBILE ── */
+@media(max-width:580px){
+  .si{ padding:18px 36px 16px; }
+  .slide::before{ left:14px; }
+  .slide::after { right:14px; }
+  .hr,.hr-d{ width:calc(100% - 52px); }
+  .sf{ padding:0 28px 14px; }
+  .price-grid{ grid-template-columns:1fr; }
+  .vs-col{ display:none; }
+  .entry-flow{ grid-template-columns:1fr 1fr; }
+  .call-steps{ grid-template-columns:1fr 1fr; }
+  .cs-step::after{ display:none; }
+  .obj-grid{ grid-template-columns:1fr; }
+  .del-grid{ grid-template-columns:1fr; }
+  .ret-grid{ grid-template-columns:1fr; }
+  .cap-tier{ grid-template-columns:60px 1fr; }
+  .sys-grid{ grid-template-columns:1fr 1fr; }
+  .kpi-row{ grid-template-columns:1fr 1fr; }
+  .cc{ padding:24px 36px; }
+  .nav{ gap:6px; padding:8px 12px; }
+  .nb{ padding:8px 14px; font-size:8px; }
+  .nl{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="pb"><div class="pf" id="pf"></div></div>
+<div class="deck">
+
+<!-- ═══ S1 COVER ═══ -->
+<div class="slide active" data-label="Cover">
+  <div class="hr"></div>
+  <div class="cc">
+    <div class="cbg" aria-hidden="true">HT</div>
+    <div class="ey" style="position:relative;z-index:1">Shadow Operator · Framework Series</div>
+    <div class="h1" style="text-align:center;position:relative;z-index:1">High-Ticket<em>Framework</em></div>
+    <div class="gr" style="justify-content:center;max-width:200px;margin:12px auto 16px;position:relative;z-index:1">
+      <div class="grl"></div><div class="grd"></div><div class="grl"></div>
+    </div>
+    <p class="bod" style="text-align:center;max-width:440px;position:relative;z-index:1;font-size:clamp(13px,1.8vw,16px)">A premium, personalised offer system — designed to attract the right clients, deliver undeniable results, and build long-term revenue through strategic retention.</p>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">01 / 11</span></div>
+</div>
+
+<!-- ═══ S2 WHAT HT IS FOR ═══ -->
+<div class="slide" data-label="Role">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">00</span><span class="bl">Foundation</span></div>
+    <div class="h2">What High-Ticket Is For</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:20px">High-ticket is not a more expensive version of mid-ticket. It is a <strong>fundamentally different relationship</strong> — deeper, more personal, and built around custom outcomes that only you can deliver.</p>
+    <div class="bl-list">
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Maximum personalisation</strong><small>Every client's journey is tailored. No templates, no group calls as the main delivery. You are the product.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Premium price = premium commitment</strong><small>A high-ticket buyer who invested $3k–$10k shows up. Low-ticket buyers sometimes don't. Price filters for action-takers.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Application required — always</strong><small>Not everyone qualifies. The application process is not gatekeeping — it's quality control that protects your results and reputation.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>The proof machine for your brand</strong><small>One high-ticket client who gets a transformative result is worth 50 low-ticket testimonials. This is where case studies are made.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Price range: $2,000 – $10,000+</strong><small>Weekly 1:1 calls. Private support. Custom guidance. Price reflects the depth of access and the weight of results.</small></div></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">02 / 11</span></div>
+</div>
+
+<!-- ═══ S3 OFFER DESIGN ═══ -->
+<div class="slide" data-label="Offer Design">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">01</span><span class="bl">Offer Design</span></div>
+    <div class="h2">Designing the Offer</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">Four non-negotiables every high-ticket offer must have before it goes to market. These four elements also become the foundation of your positioning, scripts, and sales call.</p>
+
+    <div class="bl-list" style="margin-bottom:16px">
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Transformation</strong><small>From [current situation] to [dreamed outcome]. Specific, vivid, and measurable. Not "better results" — "from 0 to $5k/month in 90 days."</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Timeframe</strong><small>Defined duration creates urgency and sets expectations. 3 months, 6 months, or 12 months. Open-ended engagements drift.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Method (your unique process)</strong><small>What makes your approach different? This is what justifies the premium price. Name it if you can — a named method is more memorable and sellable.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Constraints — who it's NOT for</strong><small>The most powerful positioning tool you have. Saying who you won't work with makes the right person feel more chosen.</small></div></div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">◆</div>
+      <div class="callout-text">These four elements are not just offer design — they become the foundation of your VSL, your DM scripts, your sales call opening, and your Typeform qualifier. Define them once. Use them everywhere.</div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">03 / 11</span></div>
+</div>
+
+<!-- ═══ S4 PRICING MODEL ═══ -->
+<div class="slide" data-label="Pricing">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">01B</span><span class="bl">Pricing Model</span></div>
+    <div class="h2">Fixed vs Flexible Pricing</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">The pricing model you choose changes the entire sales process. <strong>Choose based on offer complexity and buyer readiness</strong> — not on what feels comfortable.</p>
+
+    <div class="price-grid">
+      <div class="pc">
+        <div class="pc-tag">Model A</div>
+        <div class="pc-name">Fixed Price</div>
+        <div class="pc-item">No sales call required</div>
+        <div class="pc-item">Typeform qualifier + direct to checkout</div>
+        <div class="pc-item">Works for offers under $3,000</div>
+        <div class="pc-item">Self-qualified buyers — higher intent</div>
+        <div class="pc-item">Faster path to revenue</div>
+        <div style="margin-top:10px;font-family:var(--cor);font-size:12px;color:var(--muted);font-style:italic">Best for: productised high-ticket with a clear, defined outcome</div>
+      </div>
+      <div class="vs-col"><div class="vs-text">VS</div></div>
+      <div class="pc hl">
+        <div class="pc-tag">Model B · Most Common</div>
+        <div class="pc-name">Flexible / Call-Based</div>
+        <div class="pc-item">Sales call required</div>
+        <div class="pc-item">Price discussed and closed on the call</div>
+        <div class="pc-item">Works for offers $3,000–$10,000+</div>
+        <div class="pc-item">Allows custom scoping per client</div>
+        <div class="pc-item">Higher close rate with right script</div>
+        <div style="margin-top:10px;font-family:var(--cor);font-size:12px;color:var(--gold-l);font-style:italic">Best for: bespoke engagements where scope varies per client</div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:12px">
+      <div class="callout-icon">◆</div>
+      <div class="callout-text">Fixed pricing removes friction and scales faster. Call-based pricing allows you to tailor scope and price — but requires a trained sales process. <em>Neither is better. The right one depends on your offer.</em></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">04 / 11</span></div>
+</div>
+
+<!-- ═══ S5 POSITIONING ═══ -->
+<div class="slide" data-label="Positioning">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">02</span><span class="bl">Positioning</span></div>
+    <div class="h2">Positioning the Offer</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">Positioning is not what you say about yourself. It's what your <strong>ideal client believes about you before they ever speak to you</strong>. These three questions must be answered with specificity — not left open.</p>
+
+    <div class="bl-list" style="margin-bottom:16px">
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Who is this for, exactly?</strong><small>Not "coaches and creators." Specifically: what niche, what revenue stage, what platform, what problem are they currently stuck at? The more specific, the more magnetic.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>What problem stage are they at?</strong><small>Are they starting from zero, stuck at $1–3k/mo, or scaling past $5k? The problem stage determines your message, your entry point, and your price.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Why you, and not someone else?</strong><small>Your lived experience, your results, your method. This is not modesty territory — it's the answer to the objection they're already thinking. Write it down before the first sales call.</small></div></div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">◆</div>
+      <div class="callout-text">These three answers go directly into your VSL script, your DM opener, and your sales call introduction. <em>Positioning is not a marketing exercise — it is a sales preparation exercise.</em></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">05 / 11</span></div>
+</div>
+
+<!-- ═══ S6 ENTRY SYSTEM ═══ -->
+<div class="slide" data-label="Entry System">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">03</span><span class="bl">Entry System</span></div>
+    <div class="h2">The Entry System</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">The entry system does two jobs: <strong>attract the right people</strong> and <strong>filter out the wrong ones</strong> before they reach the sales call. Every unqualified call is a wasted hour.</p>
+
+    <div class="entry-flow">
+      <div class="ef-step">
+        <div class="ef-num">01</div>
+        <div class="ef-name">Content</div>
+        <div class="ef-desc">Authority content with DM trigger (e.g. "DM MENTOR")</div>
+      </div>
+      <div class="ef-step">
+        <div class="ef-num">02</div>
+        <div class="ef-name">DM / Funnel</div>
+        <div class="ef-desc">Automated or manual DM sequence opens the conversation</div>
+      </div>
+      <div class="ef-step hl">
+        <div class="ef-num">03</div>
+        <div class="ef-name">Qualification</div>
+        <div class="ef-desc">One question filters fit. Low quality leads → auto-nurture</div>
+      </div>
+      <div class="ef-step hl">
+        <div class="ef-num">04</div>
+        <div class="ef-name">Book Call</div>
+        <div class="ef-desc">Qualified leads book via Calendly. CRM captures all data.</div>
+      </div>
+    </div>
+
+    <div class="bl-list">
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>The qualification question</strong><small>One question that surfaces budget, commitment, and fit. Example: "What's your current monthly revenue and what's stopping you from 3× it?" Disqualifies by answer, not by gatekeeping.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>Auto-nurture for not-ready leads</strong><small>Leads who don't qualify now are not lost — they go into an email + broadcast sequence. They become buyers in 30–90 days. Never discard a lead who showed intent.</small></div></div>
+      <div class="bl-item"><span class="dot">◆</span><div class="bt"><strong>CRM follow-up system</strong><small>Every qualified lead who books is tracked. No-shows are followed up. Every touchpoint is logged. The CRM is the nervous system of the entry system.</small></div></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">06 / 11</span></div>
+</div>
+
+<!-- ═══ S7 SALES SYSTEM ═══ -->
+<div class="slide" data-label="Sales System">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">04</span><span class="bl">Sales System</span></div>
+    <div class="h2">The Sales System</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">The call is not a conversation — it is a <strong>structured diagnostic process</strong> that moves the prospect from awareness of their problem to conviction in your solution. Every step has a purpose.</p>
+
+    <div class="call-steps">
+      <div class="cs-step">
+        <div class="cs-num">01</div>
+        <div class="cs-name">Diagnose</div>
+        <div class="cs-desc">Understand their current situation, goals, and what they've already tried.</div>
+      </div>
+      <div class="cs-step">
+        <div class="cs-num">02</div>
+        <div class="cs-name">Gap</div>
+        <div class="cs-desc">Identify the specific gap between where they are and where they want to be.</div>
+      </div>
+      <div class="cs-step">
+        <div class="cs-num">03</div>
+        <div class="cs-name">Solution</div>
+        <div class="cs-desc">Present how your offer bridges that exact gap. Specific, not generic.</div>
+      </div>
+      <div class="cs-step">
+        <div class="cs-num">04</div>
+        <div class="cs-name">Close</div>
+        <div class="cs-desc">Present price, invite decision, handle objections, confirm next steps.</div>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kv">Calendly</div><div class="kl">Booking system</div></div>
+      <div class="kpi"><div class="kv">CRM + Zoom</div><div class="kl">Track + conduct calls</div></div>
+      <div class="kpi"><div class="kv">Post-call</div><div class="kl">Follow-up sequence within 2hrs</div></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">07 / 11</span></div>
+</div>
+
+<!-- ═══ S8 OBJECTION HANDLING ═══ -->
+<div class="slide" data-label="Objections">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">04B</span><span class="bl">Sales — Critical Additions</span></div>
+    <div class="h2">The Three Scenarios That Kill Close Rates</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">These three scenarios account for <strong>80% of lost deals</strong>. Every operator needs a scripted response for each — not improvised, not hoped away. Written and rehearsed before the first call.</p>
+
+    <div class="obj-grid">
+      <div class="obj-card">
+        <div class="oc-q">"I need to think about it."</div>
+        <div class="oc-a">"Totally understand. What specifically do you need to think through? Is it the investment, the timing, or whether this is the right fit?" — Identify the real objection. Then address that, not the surface one.</div>
+      </div>
+      <div class="obj-card">
+        <div class="oc-q">"I can't afford it right now."</div>
+        <div class="oc-a">"If money wasn't the issue, would this be the right solution for you?" If yes: explore payment plans. If no: the money objection is hiding a different objection. Find it.</div>
+      </div>
+      <div class="obj-card">
+        <div class="oc-q">No-show on the call.</div>
+        <div class="oc-a">Follow-up 1: within 15 mins. Follow-up 2: next day with a rebook link. Follow-up 3: 3 days later, final attempt. After three no-responses: move to nurture sequence, not the bin.</div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:14px">
+      <div class="callout-icon">◆</div>
+      <div class="callout-text">The goal is never to pressure — it's to <em>remove genuine uncertainty</em>. A prospect who says no because they're scared is not a lost lead. They're a future client if you handle it with patience and precision.</div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">08 / 11</span></div>
+</div>
+
+<!-- ═══ S9 DELIVERY SYSTEM ═══ -->
+<div class="slide" data-label="Delivery">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">05</span><span class="bl">Delivery System</span></div>
+    <div class="h2">Delivering the Premium Experience</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">High-ticket delivery must feel premium at every touchpoint. <strong>The client should never wonder what they're getting or what comes next.</strong> Clarity and consistency are what justify the price.</p>
+
+    <div class="del-grid">
+      <div class="dg hl">
+        <div class="dg-lbl">Core Delivery (Weekly)</div>
+        <div class="dg-item">1 × Weekly 1:1 call (30–60 min)</div>
+        <div class="dg-item">Community / private support access</div>
+        <div class="dg-item">Custom guidance per session</div>
+        <div class="dg-item">Session notes + action items</div>
+      </div>
+      <div class="dg">
+        <div class="dg-lbl">Scalable Support Layer</div>
+        <div class="dg-item">Form-based async feedback</div>
+        <div class="dg-item">Templates + SOPs per client need</div>
+        <div class="dg-item">Resource library (evergreen)</div>
+        <div class="dg-item">Office hours (limited slots)</div>
+      </div>
+      <div class="dg">
+        <div class="dg-lbl">Client Progress Tracking</div>
+        <div class="dg-item">KPIs defined per client at start</div>
+        <div class="dg-item">Progress review at Week 4 + Week 8</div>
+        <div class="dg-item">CRM notes after every call</div>
+        <div class="dg-item">Monthly performance summary</div>
+      </div>
+      <div class="dg hl">
+        <div class="dg-lbl">What "Premium" Feels Like</div>
+        <div class="dg-item">Response within 24 hours — always</div>
+        <div class="dg-item">They never chase you for an update</div>
+        <div class="dg-item">Every call has a clear agenda</div>
+        <div class="dg-item">They feel seen, not processed</div>
+      </div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">09 / 11</span></div>
+</div>
+
+<!-- ═══ S10 RETENTION + CAPACITY ═══ -->
+<div class="slide" data-label="Retention">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">06</span><span class="bl">Retention + Capacity</span></div>
+    <div class="h2">Retain, Extend, Scale</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+
+    <div class="ret-grid" style="margin-bottom:14px">
+      <div class="rc gold">
+        <div class="rc-lbl">Path 01 · Primary</div>
+        <div class="rc-name">Extend 3–6 Months</div>
+        <div class="rc-body">Week 8–10 re-sign conversation. Review results together, present what's still possible, and propose the extension naturally.</div>
+        <div class="rc-script">"You've made real progress. Here's what I think the next 3 months could unlock — want to keep going?"</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Path 02</div>
+        <div class="rc-name">Upsell to Higher Tier</div>
+        <div class="rc-body">Top performers who've exhausted the current scope are offered a deeper, more intensive engagement. This is the highest-trust upsell you can make.</div>
+        <div class="rc-script">"You're doing well — want deeper, more personalised support to go further?"</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Path 03 · Retention Safety Net</div>
+        <div class="rc-name">Downgrade to Community</div>
+        <div class="rc-body">Clients who can't renew at full price are offered a mid-ticket program or alumni community. Keeps them in the ecosystem. Keeps the relationship alive.</div>
+        <div class="rc-script">"Even if now's not the right time for 1:1, stay in the ecosystem — the alumni community keeps you moving."</div>
+      </div>
+    </div>
+
+    <div class="kpi-row" style="margin-top:0">
+      <div class="kpi"><div class="kv">3–6mo</div><div class="kl">Extension target window</div></div>
+      <div class="kpi"><div class="kv">10–30%</div><div class="kl">Upsell to higher tier</div></div>
+      <div class="kpi"><div class="kv">LTV</div><div class="kl">Per client, not per project</div></div>
+    </div>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">10 / 11</span></div>
+</div>
+
+<!-- ═══ S11 CAPACITY + SYSTEM OVERVIEW ═══ -->
+<div class="slide" data-label="Capacity">
+  <div class="hr"></div>
+  <div class="si">
+    <div class="badge"><span class="bn">07</span><span class="bl">Capacity + Team System</span></div>
+    <div class="h2">Build the Business, Not Just the Practice</div>
+    <div class="gr"><div class="grl"></div><div class="grd"></div><div class="grl"></div></div>
+    <p class="bod" style="margin-bottom:16px">Most operators discover their capacity ceiling by hitting it. Define it before you're overwhelmed — and plan the hires before you need them.</p>
+
+    <div class="cap-tier" style="border-radius:4px 4px 0 0">
+      <div class="ct-num" style="border-radius:4px 0 0 0"><div class="ct-count">1–10</div><div class="ct-label">clients</div></div>
+      <div class="ct-body" style="border-radius:0 4px 0 0">
+        <div class="ct-name">Solo Operator</div>
+        <div class="ct-desc">You handle all delivery, sales, and admin. This is sustainable if delivery per client is tight and systems are in place.</div>
+        <div class="ct-trigger">Hire when: <strong>DMs exceed 2 hrs/day or MRR hits $8–10k</strong></div>
+      </div>
+    </div>
+    <div class="cap-tier">
+      <div class="ct-num"><div class="ct-count">10–25</div><div class="ct-label">clients</div></div>
+      <div class="ct-body">
+        <div class="ct-name">Hire a Setter</div>
+        <div class="ct-desc">Setter handles inbound DMs, lead qualification, and call booking. You focus on closing and delivery only.</div>
+        <div class="ct-trigger">Hire when: <strong>lead volume is high but close rate is dropping due to slow response</strong></div>
+      </div>
+    </div>
+    <div class="cap-tier" style="margin-bottom:14px">
+      <div class="ct-num" style="border-radius:0 0 0 4px"><div class="ct-count">25–50</div><div class="ct-label">clients</div></div>
+      <div class="ct-body" style="border-radius:0 0 4px 0">
+        <div class="ct-name">Hire a Support Coach</div>
+        <div class="ct-desc">Support coach handles a portion of delivery calls and async support. You step into the CEO role — strategy, top clients, and team management.</div>
+        <div class="ct-trigger">Hire when: <strong>delivery exceeds 4 hrs/day or MRR consistently above $20k</strong></div>
+      </div>
+    </div>
+
+    <p class="bod" style="text-align:center;font-style:italic;font-size:clamp(13px,1.6vw,15px)">"The goal is not to work more clients.<br>The goal is to build a system that delivers results without depending entirely on you."</p>
+  </div>
+  <div class="hr-d"></div>
+  <div class="sf"><span class="sf-b">Shadow Operator</span><span class="sf-n">11 / 11</span></div>
+</div>
+
+</div>
+
+<!-- ── NAV ── -->
+<nav class="nav" aria-label="Slide navigation">
+  <button class="nb" id="bp" onclick="go(-1)" disabled>← Prev</button>
+  <div class="dots" id="dots" role="tablist"></div>
+  <span class="nl" id="nl">Cover</span>
+  <button class="nb" id="bn" onclick="go(1)">Next →</button>
+</nav>
+
+<script>
+const slides=Array.from(document.querySelectorAll('.slide'));
+const dots=document.getElementById('dots');
+const nl=document.getElementById('nl');
+const pf=document.getElementById('pf');
+let cur=0;
+slides.forEach((s,i)=>{
+  const d=document.createElement('button');
+  d.className='nd'+(i===0?' active':'');
+  d.setAttribute('role','tab');
+  d.setAttribute('aria-label','Slide '+(i+1));
+  d.onclick=()=>goTo(i);
+  dots.appendChild(d);
+});
+function goTo(n){
+  slides[cur].classList.remove('active');
+  dots.children[cur].classList.remove('active');
+  cur=Math.max(0,Math.min(n,slides.length-1));
+  slides[cur].classList.add('active');
+  dots.children[cur].classList.add('active');
+  nl.textContent=slides[cur].dataset.label||'';
+  document.getElementById('bp').disabled=cur===0;
+  document.getElementById('bn').disabled=cur===slides.length-1;
+  pf.style.width=((cur+1)/slides.length*100)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function go(d){goTo(cur+d);}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);
+});
+let tx=0;
+document.addEventListener('touchstart',e=>tx=e.changedTouches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>48)go(dx<0?1:-1);
+},{passive:true});
+goTo(0);
+</script>
+</body>
+</html>
